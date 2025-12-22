@@ -1,0 +1,17 @@
+## Response Mapping Template para createBook
+## Maneja errores de duplicados y otros errores de DynamoDB
+
+## Verificar si hay error
+#if($ctx.error)
+    ## Manejar específicamente el error de duplicado (ConditionalCheckFailedException)
+    #if($ctx.error.type == "DynamoDB:ConditionalCheckFailedException")
+        ## Mensaje de error personalizado para duplicados
+        $util.error("A book with title '$ctx.args.input.title' by author '$ctx.args.input.authorId' already exists. Please use a different title or verify the author.", "DuplicateBookError")
+    #else
+        ## Otros errores de DynamoDB
+        $util.error($ctx.error.message, $ctx.error.type)
+    #end
+#end
+
+## Si no hay error, retornar el resultado
+$util.toJson($ctx.result)

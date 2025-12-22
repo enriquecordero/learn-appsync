@@ -1,0 +1,60 @@
+## Request Mapping Template para createBook con validación de duplicados
+## Usa Conditional Writes para prevenir duplicados de forma atómica
+
+## Validaciones básicas
+#if($util.isNullOrEmpty($ctx.args.input.title) || $ctx.args.input.title.trim() == "")
+    $util.error("Title is required", "ValidationError")
+#end
+
+#if($util.isNullOrEmpty($ctx.args.input.authorId))
+    $util.error("AuthorId is required", "ValidationError")
+#end
+
+#if($util.isNullOrEmpty($ctx.args.input.publisherId))
+    $util.error("PublisherId is required", "ValidationError")
+#end
+
+## Generar la clave título-autor para garantizar unicidad
+#set($cleanTitle = $ctx.args.input.title.toLowerCase().replaceAll("[^a-z0-9]", ""))
+#set($cleanAuthor = $ctx.args.input.authorId.toLowerCase().replaceAll("[^a-z0-9]", ""))
+#set($titleAuthorKey = "${cleanTitle}#${cleanAuthor}")
+
+## Usar titleAuthorKey como ID para garantizar unicidad automática
+#set($id = $titleAuthorKey)
+
+## Preparar el item completo
+#set($item = {
+    "id": $id,
+    "title": $ctx.args.input.title,
+    "authorId": $ctx.args.input.authorId,
+    "publisherId": $ctx.args.input.publisherId,
+    "titleAuthorKey": $titleAuthorKey,
+    "createdAt": $util.time.nowISO8601(),
+    "updatedAt": $util.time.nowISO8601()
+})
+
+## Agregar campos opcionales si existen
+#if(!$util.isNullOrEmpty($ctx.args.input.isbn))
+    $util.qr($item.put("isbn", $ctx.args.input.isbn))
+#end
+
+#if(!$util.isNullOrEmpty($ctx.args.input.genre))
+    $util.qr($item.put("genre", $ctx.args.input.genre))
+#end
+
+#if(!$util.isNullOrEmpty($ctx.args.input.description))
+    $util.qr($item.put("description", $ctx.args.input.description))
+#end
+
+## DynamoDB PutItem con Conditional Write
+{
+    "version": "2018-05-29",
+    "operation": "PutItem",
+    "key": {
+        "id": $util.dynamodb.toDynamoDBJson($id)
+    },
+    "attributeValues": $util.dynamodb.toMapValuesJson($item),
+    "condition": {
+        "expression": "attribute_not_exists(id)"
+    }
+}

@@ -1,0 +1,132 @@
+### Probar createBook mutation con validación de duplicados VTL + Conditional Writes
+POST https://xypn7ngerfetfe4zmrqzobglt4.appsync-api.us-east-1.amazonaws.com/graphql
+Content-Type: application/json
+x-api-key: da2-tci3g3urmfh5zjeyaqe4r4h3cm
+
+{
+  "query": "mutation CreateBook($input: CreateBookInput!) { createBook(input: $input) { id title authorId publisherId isbn genre description createdAt updatedAt } }",
+  "variables": {
+    "input": {
+      "title": "Clean Code",
+      "authorId": "author-123",
+      "publisherId": "pub-456",
+      "isbn": "978-0132350884",
+      "genre": "Programming",
+      "description": "A handbook of agile software craftsmanship"
+    }
+  }
+}
+
+###
+
+### Probar DUPLICADO - mismo título y autor (DEBE FALLAR con DuplicateBookError)
+POST https://xypn7ngerfetfe4zmrqzobglt4.appsync-api.us-east-1.amazonaws.com/graphql
+Content-Type: application/json
+x-api-key: da2-tci3g3urmfh5zjeyaqe4r4h3cm
+
+{
+  "query": "mutation CreateBook($input: CreateBookInput!) { createBook(input: $input) { id title authorId publisherId isbn genre description createdAt updatedAt } }",
+  "variables": {
+    "input": {
+      "title": "Clean Code",
+      "authorId": "author-123",
+      "publisherId": "pub-456",
+      "isbn": "978-0132350885",
+      "genre": "Programming",
+      "description": "Duplicate test - should fail"
+    }
+  }
+}
+
+###
+
+### Probar createBook mutation - Libro diferente (debe funcionar)
+POST https://xypn7ngerfetfe4zmrqzobglt4.appsync-api.us-east-1.amazonaws.com/graphql
+Content-Type: application/json
+x-api-key: da2-tci3g3urmfh5zjeyaqe4r4h3cm
+
+{
+  "query": "mutation CreateBook($input: CreateBookInput!) { createBook(input: $input) { id title authorId publisherId isbn genre description createdAt updatedAt } }",
+  "variables": {
+    "input": {
+      "title": "The Pragmatic Programmer",
+      "authorId": "author-456",
+      "publisherId": "pub-789",
+      "isbn": "978-0201616224",
+      "genre": "Programming",
+      "description": "From journeyman to master"
+    }
+  }
+}
+
+###
+
+### Probar validación - Sin título (debería fallar)
+POST https://xypn7ngerfetfe4zmrqzobglt4.appsync-api.us-east-1.amazonaws.com/graphql
+Content-Type: application/json
+x-api-key: da2-tci3g3urmfh5zjeyaqe4r4h3cm
+
+{
+  "query": "mutation CreateBook($input: CreateBookInput!) { createBook(input: $input) { id title authorId publisherId } }",
+  "variables": {
+    "input": {
+      "title": "",
+      "authorId": "author-123",
+      "publisherId": "pub-456"
+    }
+  }
+}
+
+###
+
+### Probar validación - Sin authorId (debería fallar)
+POST https://xypn7ngerfetfe4zmrqzobglt4.appsync-api.us-east-1.amazonaws.com/graphql
+Content-Type: application/json
+x-api-key: da2-tci3g3urmfh5zjeyaqe4r4h3cm
+
+{
+  "query": "mutation CreateBook($input: CreateBookInput!) { createBook(input: $input) { id title authorId publisherId } }",
+  "variables": {
+    "input": {
+      "title": "Some Book",
+      "authorId": "",
+      "publisherId": "pub-456"
+    }
+  }
+}
+
+###
+
+### Query para listar libros (JavaScript resolver)
+POST https://xypn7ngerfetfe4zmrqzobglt4.appsync-api.us-east-1.amazonaws.com/graphql
+Content-Type: application/json
+x-api-key: da2-tci3g3urmfh5zjeyaqe4r4h3cm
+
+{
+  "query": "query { listBooks { id title authorId publisherId isbn genre createdAt } }"
+}
+
+###
+
+### Query para obtener un libro específico (JavaScript resolver)
+POST https://xypn7ngerfetfe4zmrqzobglt4.appsync-api.us-east-1.amazonaws.com/graphql
+Content-Type: application/json
+x-api-key: da2-tci3g3urmfh5zjeyaqe4r4h3cm
+
+{
+  "query": "query GetBook($id: ID!) { getBook(id: $id) { id title authorId publisherId isbn genre description createdAt updatedAt } }",
+  "variables": {
+    "id": "cleancode#author123"
+  }
+}
+
+###
+
+### Introspection query para ver el schema
+POST https://xypn7ngerfetfe4zmrqzobglt4.appsync-api.us-east-1.amazonaws.com/graphql
+Content-Type: application/json
+x-api-key: da2-tci3g3urmfh5zjeyaqe4r4h3cm
+
+{
+  "query": "query IntrospectionQuery { __schema { queryType { name } mutationType { name } subscriptionType { name } types { ...FullType } } } fragment FullType on __Type { kind name description fields(includeDeprecated: true) { name description args { ...InputValue } type { ...TypeRef } isDeprecated deprecationReason } inputFields { ...InputValue } interfaces { ...TypeRef } enumValues(includeDeprecated: true) { name description isDeprecated deprecationReason } possibleTypes { ...TypeRef } } fragment InputValue on __InputValue { name description type { ...TypeRef } defaultValue } fragment TypeRef on __Type { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name } } } } } } } }"
+}

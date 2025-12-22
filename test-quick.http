@@ -1,0 +1,43 @@
+### 1. Crear un libro de prueba
+POST https://xypn7ngerfetfe4zmrqzobglt4.appsync-api.us-east-1.amazonaws.com/graphql
+Content-Type: application/json
+x-api-key: da2-tci3g3urmfh5zjeyaqe4r4h3cm
+
+{
+  "query": "mutation CreateBook($input: CreateBookInput!) { createBook(input: $input) { id title authorId publisherId isbn genre description createdAt updatedAt } }",
+  "variables": {
+    "input": {
+      "title": "JavaScript: The Good Parts",
+      "authorId": "douglas-crockford",
+      "publisherId": "oreilly",
+      "isbn": "978-0596517748",
+      "genre": "Programming",
+      "description": "A deep dive into the good parts of JavaScript"
+    }
+  }
+}
+
+###
+
+### 2. Listar todos los libros (JavaScript resolver)
+POST https://xypn7ngerfetfe4zmrqzobglt4.appsync-api.us-east-1.amazonaws.com/graphql
+Content-Type: application/json
+x-api-key: da2-tci3g3urmfh5zjeyaqe4r4h3cm
+
+{
+  "query": "query { listBooks { id title authorId publisherId isbn genre createdAt } }"
+}
+
+###
+
+### 3. Obtener libro específico (JavaScript resolver)
+POST https://xypn7ngerfetfe4zmrqzobglt4.appsync-api.us-east-1.amazonaws.com/graphql
+Content-Type: application/json
+x-api-key: da2-tci3g3urmfh5zjeyaqe4r4h3cm
+
+{
+  "query": "query GetBook($id: ID!) { getBook(id: $id) { id title authorId publisherId isbn genre description createdAt updatedAt } }",
+  "variables": {
+    "id": "javascriptthegoodparts#douglas-crockford"
+  }
+}
